@@ -28,6 +28,21 @@ export interface LeaderboardEntry {
   score: number
 }
 
+export interface TurnsPackage {
+  packageId: string
+  turns: number
+  amount: number
+  currency: string
+}
+
+export interface PaymentResult {
+  status: string
+  turnsAdded: number
+  remainingTurns: number
+  amount: number
+  currency: string
+}
+
 export const api = axios.create({ baseURL: '/api' })
 
 export function setAccessToken(token: string | null) {
@@ -49,5 +64,6 @@ export function getErrorMessage(error: unknown): string {
     }
     if (!error.response) return 'Không kết nối được máy chủ. Hãy kiểm tra backend đang chạy.'
   }
+  if (error instanceof Error && error.message) return error.message
   return 'Đã có lỗi xảy ra. Vui lòng thử lại.'
 }

@@ -3,7 +3,6 @@ package com.example.guess_number_game.controller;
 import com.example.guess_number_game.dto.GameRequest;
 import com.example.guess_number_game.dto.GameResult;
 import com.example.guess_number_game.dto.LeaderboardResponse;
-import com.example.guess_number_game.dto.UserInfoResponse;
 import com.example.guess_number_game.service.GameService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,11 +34,6 @@ public class GameController {
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.badRequest().body(exception.getMessage());
         }
-    }
-
-    @PostMapping("/buy-turns")
-    public ResponseEntity<UserInfoResponse> buyTurns(@AuthenticationPrincipal String username) {
-        return ResponseEntity.ok(gameService.buyTurns(username));
     }
 
     @GetMapping("/leaderboard")

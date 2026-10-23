@@ -1,4 +1,4 @@
-# Guess Number Game API
+﻿# Guess Number Game API
 
 Spring Boot 3.5 + Java 21 + MySQL project scaffold for the Java test.
 
@@ -21,6 +21,10 @@ Override defaults with environment variables when needed:
 - `DB_PASSWORD`
 - `SERVER_PORT`
 
+
+### Local environment file
+
+The backend loads `.env` automatically. Put it in this backend folder beside `pom.xml`; the actual `.env` is ignored by Git. Start Spring Boot from this folder with `./mvnw.cmd spring-boot:run`—no `$env:...` commands are needed. Use `.env.example` as a template. Get the Client ID and Secret from a PayPal Developer Sandbox REST app; the sandbox buyer email/password are entered on PayPal's approval page.
 ## Run
 
 From this directory in PowerShell:
@@ -76,15 +80,22 @@ Authorization: Bearer <accessToken>
 
 Returns `id`, `username`, `email`, `score` and `turns`. The password hash is never included.
 
-### Buy turns
+### Buy turns with PayPal Sandbox
+
+Read the package with `GET /api/payments/paypal/packages`, then create an order:
 
 ```http
-POST http://localhost:8080/api/game/buy-turns
+POST http://localhost:8080/api/payments/paypal/orders
 Authorization: Bearer <accessToken>
+Content-Type: application/json
+
+{"packageId":"turns-5"}
 ```
 
-Adds exactly five turns to the authenticated user and returns the updated profile.
+Open the returned `approvalUrl` and approve it using a PayPal Sandbox Personal buyer account. The frontend captures the approved order, and the backend adds turns only after PayPal confirms capture. Repeated capture requests do not award duplicate turns.
 
+Store credentials in the backend `.env` file beside `pom.xml` using `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET`; use `.env.example` as a template. The dotenv integration loads it automatically when Spring Boot starts from the backend directory. Never commit the real `.env` or share its secret.
+The default package is 5 turns for 1.00 USD. Override it with `PAYPAL_TURNS_AMOUNT`, `PAYPAL_TURNS_PRICE`, or `PAYPAL_CURRENCY`. Keep the client secret out of source control.
 ### Leaderboard
 
 ```http
@@ -95,7 +106,7 @@ Returns up to ten users ordered by score descending.
 
 ### Play one round
 
-The user is identified from the JWT, so do not include a `userId` in the request body. A newly registered account starts with zero turns, so first call `/api/game/buy-turns`.
+The user is identified from the JWT, so do not include a `userId` in the request body. A newly registered account starts with zero turns, so first purchase a package through PayPal Sandbox.
 
 ```http
 POST http://localhost:8080/api/game/guess
@@ -111,3 +122,7 @@ Set `JWT_SECRET` to a private secret of at least 32 characters before deploying.
 ## Current data model
 
 `users` stores username, email, password hash, score, turns and an optimistic-lock version. New users start with zero score and zero turns. Passwords are hashed with BCrypt before saving.
+
+
+
+
