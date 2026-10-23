@@ -7,7 +7,6 @@ import java.util.List;
 import com.example.guess_number_game.dto.GameRequest;
 import com.example.guess_number_game.dto.GameResult;
 import com.example.guess_number_game.dto.LeaderboardResponse;
-import com.example.guess_number_game.dto.UserInfoResponse;
 import com.example.guess_number_game.event.LeaderboardChangedEvent;
 import com.example.guess_number_game.user.User;
 import com.example.guess_number_game.repository.UserRepository;
@@ -63,18 +62,6 @@ public class GameService {
                 secretNumber,
                 user.getTurns(),
                 user.getScore()
-        );
-    }
-
-    @Transactional
-    public UserInfoResponse buyTurns(String username) {
-        User user = userRepository.findByUsernameForUpdate(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        user.setTurns(user.getTurns() + 5);
-        userRepository.save(user);
-        eventPublisher.publishEvent(new LeaderboardChangedEvent(user.getUsername(), false));
-        return new UserInfoResponse(
-                user.getId(), user.getUsername(), user.getEmail(), user.getScore(), user.getTurns()
         );
     }
 

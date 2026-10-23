@@ -1,6 +1,6 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { ArrowRight, Crown, Gamepad2, LoaderCircle, LogOut, RotateCcw, Sparkles, UserRound, Zap } from 'lucide-react'
-import { api, getErrorMessage, setAccessToken, type GameResult, type LeaderboardEntry, type LoginResponse, type UserInfo } from './api'
+import { api, getErrorMessage, setAccessToken, type GameResult, type LeaderboardEntry, type LoginResponse, type PaymentResult, type TurnsPackage, type UserInfo } from './api'
 import './App.css'
 
 type AuthMode = 'login' | 'register'
@@ -9,20 +9,51 @@ function App() {
   const [token, setToken] = useState(() => localStorage.getItem('guess-number-token'))
   const [user, setUser] = useState<UserInfo | null>(null)
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [turnsPackage, setTurnsPackage] = useState<TurnsPackage | null>(null)
   const [authMode, setAuthMode] = useState<AuthMode>('login')
   const [authForm, setAuthForm] = useState({ username: '', email: '', password: '' })
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null)
   const [result, setResult] = useState<GameResult | null>(null)
-  const [loading, setLoading] = useState<'auth' | 'profile' | 'guess' | 'buy' | 'leaderboard' | null>(null)
-  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState<'auth' | 'profile' | 'guess' | 'payment' | 'leaderboard' | null>(null)
+  const [message, setMessage] = useState(() => new URLSearchParams(window.location.search).get('payment') === 'cancel' ? 'Bạn đã hủy thanh toán. Chưa có lượt nào được cộng.' : '')
   const [error, setError] = useState('')
+  const captureAttempt = useRef<string | null>(null)
 
   useEffect(() => {
     if (!token) return
     setAccessToken(token)
     void refreshUser(token)
     void loadLeaderboard()
+    void api.get<TurnsPackage>('/payments/paypal/packages').then((response) => setTurnsPackage(response.data)).catch((requestError: unknown) => setError(getErrorMessage(requestError)))
+    const query = new URLSearchParams(window.location.search)
+    const paypalOrderId = query.get('token')
+    if (query.get('payment') === 'success' && paypalOrderId && captureAttempt.current !== paypalOrderId) {
+      captureAttempt.current = paypalOrderId
+      void capturePayment(paypalOrderId)
+    } else if (query.get('payment') === 'cancel') {
+      window.history.replaceState({}, '', window.location.pathname)
+    }
   }, [token])
+
+  async function capturePayment(paypalOrderId: string) {
+    setError('')
+    setMessage('Đang xác nhận thanh toán với PayPal...')
+    setLoading('payment')
+    try {
+      const response = await api.post<PaymentResult>('/payments/paypal/capture', { paypalOrderId })
+      setUser((current) => current ? { ...current, turns: response.data.remainingTurns } : current)
+      setMessage(`Thanh toán thành công! ${response.data.turnsAdded} lượt đã được cộng.`)
+      window.history.replaceState({}, '', window.location.pathname)
+      void loadLeaderboard()
+    } catch (requestError) {
+      captureAttempt.current = null
+      setError(getErrorMessage(requestError))
+      setMessage('Không thể xác nhận thanh toán. Bạn có thể thử tải lại sau.')
+    } finally {
+      setLoading(null)
+      void refreshUser()
+    }
+  }
 
   async function refreshUser(currentToken = token) {
     if (!currentToken) return
@@ -101,16 +132,15 @@ function App() {
 
   async function handleBuyTurns() {
     setError('')
-    setLoading('buy')
+    setLoading('payment')
     try {
-      const response = await api.post<UserInfo>('/game/buy-turns')
-      setUser(response.data)
-      setResult(null)
-      setMessage('Đã cộng thêm 5 lượt chơi.')
+      if (!turnsPackage) throw new Error('Không tải được gói lượt chơi. Hãy thử làm mới trang.')
+      const response = await api.post<{ approvalUrl: string }>('/payments/paypal/orders', { packageId: turnsPackage.packageId })
+      window.location.assign(response.data.approvalUrl)
     } catch (requestError) {
       setError(getErrorMessage(requestError))
     } finally {
-      setLoading(null)
+      if (window.location.pathname === '/') setLoading(null)
     }
   }
 
@@ -198,7 +228,7 @@ function App() {
             {message && <p className="notice success" role="status">{message}</p>}
             <div className="game-actions">
               <button className="button primary play-button" disabled={busy || !selectedNumber || !user?.turns} onClick={() => void handleGuess()}>{loading === 'guess' ? <><LoaderCircle className="spinner" size={18} /> Đang đoán...</> : <>Thử vận may <ArrowRight size={18} /></>}</button>
-              <button className="button secondary buy-button" disabled={busy} onClick={() => void handleBuyTurns()}>{loading === 'buy' ? <LoaderCircle className="spinner" size={17} /> : <Zap size={17} />} Nhận thêm 5 lượt</button>
+              <button className="button secondary buy-button" disabled={busy || !turnsPackage} onClick={() => void handleBuyTurns()}>{loading === 'payment' ? <><LoaderCircle className="spinner" size={17} /> Đang mở PayPal...</> : <><Zap size={17} /> Mua {turnsPackage?.turns ?? 5} lượt · {turnsPackage ? `${turnsPackage.amount.toFixed(2)} ${turnsPackage.currency}` : '...'}</>}</button>
             </div>
             {user?.turns === 0 && <p className="empty-turns">Bạn đã dùng hết lượt. Nhận thêm lượt để tiếp tục chơi.</p>}
           </section>
