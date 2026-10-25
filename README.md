@@ -7,7 +7,7 @@ A Java 21 / Spring Boot game API with JWT authentication, MySQL persistence, Red
 | Requirement / Yêu cầu | Status / Trạng thái |
 |---|---|
 | Registration and login / Đăng ký, đăng nhập | Implemented with BCrypt and JWT. / Đã làm với BCrypt và JWT. |
-| Guess 1-5, consume one turn, update score / Đoán 1-5, trừ lượt, cập nhật điểm | Implemented, with a gameplay rule difference noted below. / Đã làm, nhưng có khác biệt luật chơi được ghi bên dưới. |
+| Guess 1-5, consume one turn, add 1 point on a win / Đoán 1-5, trừ lượt, thắng cộng 1 điểm | Implemented with a server-side 5% win chance. / Đã làm với xác suất thắng 5% do server quyết định. |
 | Buy 5 turns / Mua 5 lượt | PayPal Sandbox purchase flow implemented. / Đã làm luồng mua qua PayPal Sandbox. |
 | Top 10 leaderboard / Bảng xếp hạng top 10 | Implemented with score ordering and Redis cache. / Đã làm, sắp xếp theo điểm và cache Redis. |
 | Current user profile / Hồ sơ người dùng | Implemented at `/api/users/me`, Redis cached. / Đã làm tại `/api/users/me`, có Redis cache. |
@@ -16,9 +16,9 @@ A Java 21 / Spring Boot game API with JWT authentication, MySQL persistence, Red
 
 ### Gameplay rule to confirm / Luật chơi cần xác nhận
 
-The assignment describes choosing a random secret number from 1 to 5, awarding `score + 1` when the guess matches, and suggests a 5% win probability. Current code awards 1 point on a win, matching the score increment. The win is still rolled independently at 5%, however, and the revealed secret is set equal to the guess on a win. For strict assignment compliance, generate a random secret and determine the win by comparing it with the guess; clarify how the suggested 5% probability should interact with that rule.
+The current implementation awards `score + 1` on a win and enforces the suggested 5% win rate. It rolls the outcome first, then sets the secret number to the guess on a win or to a different number on a loss. This keeps the returned result consistent with a correct/incorrect guess. The implementation does not choose a uniformly random secret first: a uniform number from 1 to 5 would give a 20% chance for one guess. The code prioritizes the PDF's suggested 5% win rate.
 
-Đề mô tả server chọn số bí mật ngẫu nhiên từ 1 đến 5, đoán đúng thì `score + 1`, đồng thời gợi ý xác suất thắng 5%. Code hiện cộng 1 điểm khi thắng, đúng mức điểm của đề. Tuy nhiên, kết quả thắng vẫn được quay độc lập với số đoán; khi thắng, số bí mật trả về được đặt bằng số người chơi đoán. Nếu cần bám sát đề tuyệt đối, cần tạo số bí mật ngẫu nhiên và xác định thắng bằng cách so sánh với số đoán; đồng thời làm rõ gợi ý xác suất 5% áp dụng như thế nào.
+Code hiện cộng `score + 1` khi thắng và giữ tỷ lệ thắng 5% như gợi ý của đề. Server quay kết quả trước, sau đó đặt số bí mật bằng số đã đoán khi thắng hoặc một số khác khi thua. Vì vậy kết quả trả về vẫn thể hiện đoán đúng/sai nhất quán. Điểm khác là code không chọn đều số bí mật trước: nếu chọn đều từ 1 đến 5 thì một lần đoán có xác suất đúng 20%. Hiện code ưu tiên tỷ lệ thắng 5% mà đề gợi ý.
 
 ## Technology / Công nghệ
 
@@ -189,7 +189,7 @@ Trả tối đa 10 user, sắp xếp điểm giảm dần. API này không cần
 
 ## Known gaps / Điểm cần hoàn thiện
 
-1. If strict grading expects the guess to be compared with a randomly generated secret, change the current independent 5% win roll to that rule; the score increment is now `+1`.
+1. The current game awards `+1` and enforces the suggested 5% win rate by choosing the outcome first. If an evaluator expects a uniformly random secret followed by comparison, clarify that this implies a 20% win chance for a single guess and conflicts with the 5% suggestion.
 2. Run and save an actual concurrency test for simultaneous guesses by one user, and a load benchmark for `/me` and `/leaderboard`. Current locking/cache design is implemented, but evidence is not included yet.
 3. Configure production-grade secret management, database migrations, monitoring, Redis availability/failover, and PayPal webhooks before a production deployment. Current PayPal flow relies on the browser returning to request capture; a webhook can improve recovery when the user does not return to the site.
 
