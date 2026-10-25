@@ -21,7 +21,7 @@ public class GameService {
     private static final int MIN_NUMBER = 1;
     private static final int MAX_NUMBER = 5;
     private static final int WIN_PERCENTAGE = 5;
-    private static final int WIN_POINTS = 10;
+    private static final int WIN_POINTS = 1;
 
     private final UserRepository userRepository;
     private final ApplicationEventPublisher eventPublisher;

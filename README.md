@@ -16,9 +16,9 @@ A Java 21 / Spring Boot game API with JWT authentication, MySQL persistence, Red
 
 ### Gameplay rule to confirm / Luật chơi cần xác nhận
 
-The assignment describes choosing a random secret number from 1 to 5, awarding `score + 1` when the guess matches, and suggests a 5% win probability. Current code follows the earlier requested variation: it rolls a 5% win independently of the guess, awards 10 points on a win, and makes the revealed secret equal the guess on a win. If strict assignment compliance is required, change this rule to compare the guess with a random secret and award one point for a match (retaining a 5% chance requires a separate, explicit probability design).
+The assignment describes choosing a random secret number from 1 to 5, awarding `score + 1` when the guess matches, and suggests a 5% win probability. Current code awards 1 point on a win, matching the score increment. The win is still rolled independently at 5%, however, and the revealed secret is set equal to the guess on a win. For strict assignment compliance, generate a random secret and determine the win by comparing it with the guess; clarify how the suggested 5% probability should interact with that rule.
 
-Đề mô tả server chọn số bí mật ngẫu nhiên từ 1 đến 5, đoán đúng thì `score + 1`, đồng thời gợi ý xác suất thắng 5%. Code hiện theo biến thể đã yêu cầu trước đó: quay xác suất thắng 5% độc lập với số đoán, cộng 10 điểm khi thắng và công bố số bí mật bằng số người chơi đoán. Nếu cần bám sát đề tuyệt đối, hãy đổi luật thành so sánh với số bí mật ngẫu nhiên và cộng 1 điểm khi trùng (nếu vẫn giữ xác suất 5%, cần định nghĩa rõ cách kết hợp hai luật).
+Đề mô tả server chọn số bí mật ngẫu nhiên từ 1 đến 5, đoán đúng thì `score + 1`, đồng thời gợi ý xác suất thắng 5%. Code hiện cộng 1 điểm khi thắng, đúng mức điểm của đề. Tuy nhiên, kết quả thắng vẫn được quay độc lập với số đoán; khi thắng, số bí mật trả về được đặt bằng số người chơi đoán. Nếu cần bám sát đề tuyệt đối, cần tạo số bí mật ngẫu nhiên và xác định thắng bằng cách so sánh với số đoán; đồng thời làm rõ gợi ý xác suất 5% áp dụng như thế nào.
 
 ## Technology / Công nghệ
 
@@ -189,7 +189,7 @@ Trả tối đa 10 user, sắp xếp điểm giảm dần. API này không cần
 
 ## Known gaps / Điểm cần hoàn thiện
 
-1. Align the gameplay rule with the assignment if strict grading expects a random secret comparison and `+1` score; current code uses the earlier 5% / `+10` variation.
+1. If strict grading expects the guess to be compared with a randomly generated secret, change the current independent 5% win roll to that rule; the score increment is now `+1`.
 2. Run and save an actual concurrency test for simultaneous guesses by one user, and a load benchmark for `/me` and `/leaderboard`. Current locking/cache design is implemented, but evidence is not included yet.
 3. Configure production-grade secret management, database migrations, monitoring, Redis availability/failover, and PayPal webhooks before a production deployment. Current PayPal flow relies on the browser returning to request capture; a webhook can improve recovery when the user does not return to the site.
 

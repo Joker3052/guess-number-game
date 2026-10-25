@@ -115,7 +115,7 @@ Content-Type: application/json
 {"guessedNumber":3}
 ```
 
-The response includes `won`, `guessedNumber`, `secretNumber`, `remainingTurns` and `currentScore`. Each valid game request consumes one turn. A win is rolled at 5%, awards 10 points, and reveals the guessed number as the secret number; on a loss the secret number is a random different value from 1 to 5.
+The response includes `won`, `guessedNumber`, `secretNumber`, `remainingTurns` and `currentScore`. Each valid game request consumes one turn. A win is rolled at 5%, awards 1 point, and reveals the guessed number as the secret number; on a loss the secret number is a random different value from 1 to 5. The 5% win roll is independent of the guessed number; change this if strict assignment behavior requires winning only when the guess matches a randomly generated secret.
 
 Set `JWT_SECRET` to a private secret of at least 32 characters before deploying. The configured default secret is only for local development.
 
