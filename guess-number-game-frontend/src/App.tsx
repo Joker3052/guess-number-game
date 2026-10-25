@@ -165,7 +165,7 @@ function App() {
             <div className="number-orbit" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><strong>5</strong></div>
             <p className="eyebrow">MỘT LẦN ĐOÁN, MỘT CƠ HỘI</p>
             <h1>Vận may<br />đang gọi tên bạn.</h1>
-            <p className="intro-description">Chọn một con số từ 1 đến 5. Đoán đúng, nhận ngay 10 điểm và leo lên bảng xếp hạng.</p>
+            <p className="intro-description">Chọn một con số từ 1 đến 5. Đoán đúng, nhận ngay 1 điểm và leo lên bảng xếp hạng.</p>
           </div>
           <div className="intro-foot"><span className="online-dot" /> Sẵn sàng cho một ván mới?</div>
         </section>
@@ -223,7 +223,7 @@ function App() {
             <div className="number-picker" aria-label="Chọn số để đoán">
               {[1, 2, 3, 4, 5].map((number) => <button key={number} className={`number-button ${selectedNumber === number ? 'selected' : ''}`} onClick={() => { setSelectedNumber(number); setResult(null); setError('') }} aria-pressed={selectedNumber === number}>{number}</button>)}
             </div>
-            {result ? <div className={`result-panel ${result.won ? 'win' : 'lose'}`} role="status"><span className="result-emoji">{result.won ? '🎉' : '💫'}</span><div><strong>{result.won ? 'Bạn đã thắng!' : 'Chưa trúng lần này'}</strong><span>{result.won ? `Số bí mật là ${result.secretNumber}. Bạn nhận được 10 điểm!` : `Số bí mật là ${result.secretNumber}. Thử vận may lần nữa nhé.`}</span></div></div> : <div className="game-hint">{selectedNumber ? <>Bạn chọn số <strong>{selectedNumber}</strong>. Sẵn sàng chưa?</> : 'Chọn một con số bạn cảm thấy may mắn.'}</div>}
+            {result ? <div className={`result-panel ${result.won ? 'win' : 'lose'}`} role="status"><span className="result-emoji">{result.won ? '🎉' : '💫'}</span><div><strong>{result.won ? 'Bạn đã thắng!' : 'Chưa trúng lần này'}</strong><span>{result.won ? `Số bí mật là ${result.secretNumber}. Bạn nhận được 1 điểm!` : `Số bí mật là ${result.secretNumber}. Thử vận may lần nữa nhé.`}</span></div></div> : <div className="game-hint">{selectedNumber ? <>Bạn chọn số <strong>{selectedNumber}</strong>. Sẵn sàng chưa?</> : 'Chọn một con số bạn cảm thấy may mắn.'}</div>}
             {error && <p className="notice error" role="alert">{error}</p>}
             {message && <p className="notice success" role="status">{message}</p>}
             <div className="game-actions">
